@@ -5,7 +5,7 @@ use serde_json::json;
 
 fn main() {
     let mut db = Database::new(DatabaseConfig {
-        path: String::from("db.json"),
+        path: "db.json".to_string(),
     });
 
     db.insert_one(json!({
@@ -19,7 +19,7 @@ fn main() {
     }));
 
     let query = json!({
-        "age": 28,
+        "age": 26,
     });
 
     match db.find_one(query) {
