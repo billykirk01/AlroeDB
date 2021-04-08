@@ -1,12 +1,10 @@
 use serde_json::{to_string_pretty, Value};
 use std::fs::write;
-use std::sync::Mutex;
 use std::vec::Vec;
 
 pub struct Database {
     config: DatabaseConfig,
     documents: Vec<Value>,
-    lock: Mutex<()>,
 }
 
 pub struct DatabaseConfig {
@@ -18,18 +16,15 @@ impl Database {
         Database {
             config: config,
             documents: Vec::new(),
-            lock: Mutex::new(()),
         }
     }
 
     pub fn insert_one(&mut self, document: Value) {
-        let _lock = self.lock.lock().unwrap();
         self.documents.push(document);
         self.save()
     }
 
     pub fn find_one(&self, query: Value) -> Option<Value> {
-        let _lock = self.lock.lock().unwrap();
         let found = self.search_documents(query);
         if found.len() == 0 {
             return None;
