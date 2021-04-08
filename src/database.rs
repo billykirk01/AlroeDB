@@ -26,9 +26,11 @@ impl Database {
 
     pub fn find_one(&self, query: Value) -> Option<Value> {
         let found = self.search_documents(query);
+
         if found.len() == 0 {
             return None;
         }
+
         Some(self.documents[found[0]].to_owned())
     }
 
@@ -59,11 +61,15 @@ impl Database {
         if query_value == document_value {
             return true;
         }
-        return false;
+
+        false
     }
 
     fn save(&self) {
-        let string = to_string_pretty(&self.documents).unwrap();
-        write(&self.config.path, string).unwrap();
+        write(
+            &self.config.path,
+            to_string_pretty(&self.documents).unwrap(),
+        )
+        .unwrap();
     }
 }
