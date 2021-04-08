@@ -46,6 +46,7 @@ impl Database {
                 }
 
                 let document_value = &document[key];
+
                 include = self.match_values(query_value, document_value);
 
                 if include {
