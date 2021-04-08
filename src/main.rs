@@ -17,4 +17,13 @@ fn main() {
         "name": "Carisa",
         "age": 26,
     }));
+
+    let query = json!({
+        "age": 28,
+    });
+
+    match db.find_one(query) {
+        None => println!("No results"),
+        Some(result) => println!("Results: {}", result),
+    }
 }
