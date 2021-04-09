@@ -1,4 +1,5 @@
 use serde_json;
+use std::collections::HashMap;
 use std::fs::write;
 use std::vec::Vec;
 
@@ -53,11 +54,67 @@ impl Database {
             None => None,
             Some(found) => {
                 let mut results: Vec<serde_json::Value> = Vec::new();
-                for index in found {
+                for index in found.into_iter() {
                     results.push(self.documents[index].to_owned())
                 }
                 Some(results)
             }
+        }
+    }
+
+    pub fn update_one(&mut self, query: serde_json::Value) -> Result<(), &'static str> {
+        match query.as_object() {
+            None => Err("document to insert was invalid"),
+            Some(_) => {
+                todo!();
+            }
+        }
+    }
+
+    pub fn update_many(&mut self, query: serde_json::Value) -> Result<(), &'static str> {
+        match query.as_array() {
+            None => Err("documents to insert were invalid"),
+            Some(doc_vec) => {
+                todo!();
+            }
+        }
+    }
+
+    pub fn delete_one(&mut self, query: serde_json::Value) -> Result<(), &'static str> {
+        match query.as_object() {
+            None => Err("query was invalid"),
+            Some(_) => match self.search_documents(query) {
+                None => Err("no documents found matching query"),
+                Some(found) => {
+                    self.documents.remove(found[0]);
+                    self.save();
+                    Ok(())
+                }
+            },
+        }
+    }
+
+    pub fn delete_many(&mut self, query: serde_json::Value) -> Result<(), &'static str> {
+        match query.as_object() {
+            None => Err("query was invalid"),
+            Some(_) => match self.search_documents(query) {
+                None => Err("no documents found matching query"),
+                Some(found) => {
+                    let mut found_map: HashMap<usize, bool> = HashMap::new();
+                    for index in found.into_iter() {
+                        found_map.insert(index, true);
+                    }
+                    let mut temp = Vec::new();
+                    for (index, document) in self.documents.iter().enumerate() {
+                        if !found_map.contains_key(&index) {
+                            temp.push(document.to_owned())
+                        }
+                    }
+                    self.documents = temp;
+                    self.save();
+                    Ok(())
+                }
+            },
         }
     }
 
