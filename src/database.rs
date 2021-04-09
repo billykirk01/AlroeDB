@@ -21,28 +21,24 @@ impl Database {
 
     pub fn insert_one(&mut self, document: Value) {
         self.documents.push(document);
-
         self.save()
     }
 
     pub fn find_one(&self, query: Value) -> Option<Value> {
-        let found = self.search_documents(query);
-
-        if found.len() == 0 {
-            return None;
+        match self.search_documents(query) {
+            None => None,
+            Some(found) => Some(self.documents[found[0]].to_owned()),
         }
-
-        Some(self.documents[found[0]].to_owned())
     }
 
-    fn search_documents(&self, query: Value) -> Vec<usize> {
+    fn search_documents(&self, query: Value) -> Option<Vec<usize>> {
         let mut found: Vec<usize> = Vec::new();
 
         for (index, document) in self.documents.iter().enumerate() {
             let mut include = true;
 
             match query.as_object() {
-                None => return found,
+                None => break,
                 Some(pairs) => {
                     for (key, query_value) in pairs {
                         if !include {
@@ -61,7 +57,11 @@ impl Database {
             }
         }
 
-        found
+        if found.len() == 0 {
+            return None;
+        }
+
+        Some(found)
     }
 
     fn match_values(&self, query_value: &Value, document_value: &Value) -> bool {
