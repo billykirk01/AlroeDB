@@ -8,22 +8,44 @@ fn main() {
         path: "db.json".to_string(),
     });
 
-    db.insert_one(json!({
+    let success = db.insert_one(json!({
         "name": "Billy",
         "age": 27,
     }));
 
-    db.insert_one(json!({
+    match success {
+        Err(e) => println!("{}", e),
+        Ok(()) => println!("Successfully added document"),
+    }
+
+    let success = db.insert_many(json!([{
+        "name": "Tanner",
+        "age": 27,
+    },{
         "name": "Carisa",
         "age": 26,
-    }));
+    }]));
+
+    match success {
+        Err(e) => println!("{}", e),
+        Ok(()) => println!("Successfully added documents"),
+    }
 
     let query = json!({
-        "age": 26,
+        "name": "Billy",
     });
 
     match db.find_one(query) {
         None => println!("No results"),
         Some(result) => println!("Results: {}", result),
+    }
+
+    let query = json!({
+        "age": 26,
+    });
+
+    match db.find_many(query) {
+        None => println!("No results"),
+        Some(results) => println!("Results: {:?}", results),
     }
 }
