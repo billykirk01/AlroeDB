@@ -1,10 +1,10 @@
-use serde_json::{to_string_pretty, Value};
+use serde_json;
 use std::fs::write;
 use std::vec::Vec;
 
 pub struct Database {
     config: DatabaseConfig,
-    documents: Vec<Value>,
+    documents: Vec<serde_json::Value>,
 }
 
 pub struct DatabaseConfig {
@@ -19,7 +19,7 @@ impl Database {
         }
     }
 
-    pub fn insert_one(&mut self, document: Value) -> Result<(), &'static str> {
+    pub fn insert_one(&mut self, document: serde_json::Value) -> Result<(), &'static str> {
         match document.as_object() {
             None => Err("document to insert was invalid"),
             Some(_) => {
@@ -30,7 +30,7 @@ impl Database {
         }
     }
 
-    pub fn insert_many(&mut self, documents: Value) -> Result<(), &'static str> {
+    pub fn insert_many(&mut self, documents: serde_json::Value) -> Result<(), &'static str> {
         match documents.as_array() {
             None => Err("documents to insert were invalid"),
             Some(doc_vec) => {
@@ -41,18 +41,18 @@ impl Database {
         }
     }
 
-    pub fn find_one(&self, query: Value) -> Option<Value> {
+    pub fn find_one(&self, query: serde_json::Value) -> Option<serde_json::Value> {
         match self.search_documents(query) {
             None => None,
             Some(found) => Some(self.documents[found[0]].to_owned()),
         }
     }
 
-    pub fn find_many(&self, query: Value) -> Option<Vec<Value>> {
+    pub fn find_many(&self, query: serde_json::Value) -> Option<Vec<serde_json::Value>> {
         match self.search_documents(query) {
             None => None,
             Some(found) => {
-                let mut results: Vec<Value> = Vec::new();
+                let mut results: Vec<serde_json::Value> = Vec::new();
                 for index in found {
                     results.push(self.documents[index].to_owned())
                 }
@@ -61,7 +61,7 @@ impl Database {
         }
     }
 
-    fn search_documents(&self, query: Value) -> Option<Vec<usize>> {
+    fn search_documents(&self, query: serde_json::Value) -> Option<Vec<usize>> {
         let mut found: Vec<usize> = Vec::new();
 
         for (index, document) in self.documents.iter().enumerate() {
@@ -94,7 +94,11 @@ impl Database {
         Some(found)
     }
 
-    fn match_values(&self, query_value: &Value, document_value: &Value) -> bool {
+    fn match_values(
+        &self,
+        query_value: &serde_json::Value,
+        document_value: &serde_json::Value,
+    ) -> bool {
         if query_value == document_value {
             return true;
         }
@@ -105,7 +109,7 @@ impl Database {
     fn save(&self) {
         write(
             &self.config.path,
-            to_string_pretty(&self.documents).unwrap(),
+            serde_json::to_string_pretty(&self.documents).unwrap(),
         )
         .unwrap();
     }
