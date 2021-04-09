@@ -48,6 +48,19 @@ impl Database {
         }
     }
 
+    pub fn find_many(&self, query: Value) -> Option<Vec<Value>> {
+        match self.search_documents(query) {
+            None => None,
+            Some(found) => {
+                let mut results: Vec<Value> = Vec::new();
+                for index in found {
+                    results.push(self.documents[index].to_owned())
+                }
+                Some(results)
+            }
+        }
+    }
+
     fn search_documents(&self, query: Value) -> Option<Vec<usize>> {
         let mut found: Vec<usize> = Vec::new();
 
