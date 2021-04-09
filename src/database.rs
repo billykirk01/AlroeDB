@@ -20,26 +20,22 @@ impl Database {
         }
     }
 
-    pub fn insert_one(&mut self, document: serde_json::Value) -> Result<(), &'static str> {
+    pub fn insert_one(&mut self, document: serde_json::Value) -> Result<(), String> {
         match document.as_object() {
-            None => Err("document to insert was invalid"),
-            Some(_) => {
-                self.documents.push(document);
-                self.save();
-                Ok(())
-            }
-        }
+            None => return Err("documents to insert were invalid".to_string()),
+            Some(_) => self.documents.push(document),
+        };
+
+        self.save()
     }
 
-    pub fn insert_many(&mut self, documents: serde_json::Value) -> Result<(), &'static str> {
+    pub fn insert_many(&mut self, documents: serde_json::Value) -> Result<(), String> {
         match documents.as_array() {
-            None => Err("documents to insert were invalid"),
-            Some(doc_vec) => {
-                self.documents.append(&mut doc_vec.to_owned());
-                self.save();
-                Ok(())
-            }
-        }
+            None => return Err("documents to insert were invalid".to_string()),
+            Some(docs) => self.documents.append(&mut docs.to_owned()),
+        };
+
+        self.save()
     }
 
     pub fn find_one(&self, query: serde_json::Value) -> Option<serde_json::Value> {
@@ -54,68 +50,106 @@ impl Database {
             None => None,
             Some(found) => {
                 let mut results: Vec<serde_json::Value> = Vec::new();
-                for index in found.into_iter() {
+
+                for index in found {
                     results.push(self.documents[index].to_owned())
                 }
+
                 Some(results)
             }
         }
     }
 
-    pub fn update_one(&mut self, query: serde_json::Value) -> Result<(), &'static str> {
+    // pub fn update_one(
+    //     &mut self,
+    //     query: serde_json::Value,
+    //     update: serde_json::Value,
+    // ) -> Result<(), String> {
+    //     match query.as_object() {
+    //         None => return Err("query was invalid".to_string()),
+    //         Some(_) => (),
+    //     };
+
+    //     match update.as_object() {
+    //         None => return Err("updates were invalid".to_string()),
+    //         Some(_) => (),
+    //     };
+
+    //     match self.search_documents(query) {
+    //         None => return Err("document to delete not found".to_string()),
+    //         Some(found) => {
+    //             todo!()
+    //         }
+    //     };
+
+    //     self.save()
+    // }
+
+    // pub fn update_many(
+    //     &mut self,
+    //     query: serde_json::Value,
+    //     update: serde_json::Value,
+    // ) -> Result<(), String> {
+    //     match query.as_object() {
+    //         None => return Err("query was invalid".to_string()),
+    //         Some(_) => (),
+    //     };
+
+    //     match update.as_object() {
+    //         None => return Err("updates were invalid".to_string()),
+    //         Some(_) => (),
+    //     };
+
+    //     match self.search_documents(query) {
+    //         None => return Err("document to delete not found".to_string()),
+    //         Some(found) => {
+    //             todo!()
+    //         }
+    //     };
+
+    //     self.save()
+    // }
+
+    pub fn delete_one(&mut self, query: serde_json::Value) -> Result<(), String> {
         match query.as_object() {
-            None => Err("document to insert was invalid"),
-            Some(_) => {
-                todo!();
+            None => return Err("query was invalid".to_string()),
+            Some(_) => (),
+        };
+
+        match self.search_documents(query) {
+            None => return Err("document to delete not found".to_string()),
+            Some(found) => {
+                self.documents.remove(found[0]);
             }
-        }
+        };
+
+        self.save()
     }
 
-    pub fn update_many(&mut self, query: serde_json::Value) -> Result<(), &'static str> {
-        match query.as_array() {
-            None => Err("documents to insert were invalid"),
-            Some(doc_vec) => {
-                todo!();
+    pub fn delete_many(&mut self, query: serde_json::Value) -> Result<(), String> {
+        match query.as_object() {
+            None => return Err("query was invalid".to_string()),
+            Some(_) => (),
+        };
+
+        match self.search_documents(query) {
+            None => return Err("document to delete not found".to_string()),
+            Some(found) => {
+                let mut found_map: HashMap<usize, bool> = HashMap::new();
+                for index in found.into_iter() {
+                    found_map.insert(index, true);
+                }
+                let mut temp_documents = Vec::new();
+                for (index, document) in self.documents.iter().enumerate() {
+                    if !found_map.contains_key(&index) {
+                        temp_documents.push(document.to_owned())
+                    }
+                }
+                self.documents = temp_documents;
             }
-        }
-    }
+        };
 
-    pub fn delete_one(&mut self, query: serde_json::Value) -> Result<(), &'static str> {
-        match query.as_object() {
-            None => Err("query was invalid"),
-            Some(_) => match self.search_documents(query) {
-                None => Err("no documents found matching query"),
-                Some(found) => {
-                    self.documents.remove(found[0]);
-                    self.save();
-                    Ok(())
-                }
-            },
-        }
-    }
-
-    pub fn delete_many(&mut self, query: serde_json::Value) -> Result<(), &'static str> {
-        match query.as_object() {
-            None => Err("query was invalid"),
-            Some(_) => match self.search_documents(query) {
-                None => Err("no documents found matching query"),
-                Some(found) => {
-                    let mut found_map: HashMap<usize, bool> = HashMap::new();
-                    for index in found.into_iter() {
-                        found_map.insert(index, true);
-                    }
-                    let mut temp_documents = Vec::new();
-                    for (index, document) in self.documents.iter().enumerate() {
-                        if !found_map.contains_key(&index) {
-                            temp_documents.push(document.to_owned())
-                        }
-                    }
-                    self.documents = temp_documents;
-                    self.save();
-                    Ok(())
-                }
-            },
-        }
+        self.save()
     }
 
     fn search_documents(&self, query: serde_json::Value) -> Option<Vec<usize>> {
@@ -163,11 +197,13 @@ impl Database {
         false
     }
 
-    fn save(&self) {
-        write(
+    fn save(&self) -> Result<(), String> {
+        match write(
             &self.config.path,
             serde_json::to_string_pretty(&self.documents).unwrap(),
-        )
-        .unwrap();
+        ) {
+            Err(e) => Err(e.to_string()),
+            Ok(()) => Ok(()),
+        }
     }
 }
