@@ -21,6 +21,7 @@ impl Database {
 
     pub fn insert_one(&mut self, document: Value) {
         self.documents.push(document);
+
         self.save()
     }
 
@@ -40,17 +41,22 @@ impl Database {
         for (index, document) in self.documents.iter().enumerate() {
             let mut include = true;
 
-            for (key, query_value) in query.as_object().unwrap() {
-                if !include {
-                    break;
-                }
+            match query.as_object() {
+                None => return found,
+                Some(pairs) => {
+                    for (key, query_value) in pairs {
+                        if !include {
+                            break;
+                        }
 
-                let document_value = &document[key];
+                        let document_value = &document[key];
 
-                include = self.match_values(query_value, document_value);
+                        include = self.match_values(query_value, document_value);
 
-                if include {
-                    found.push(index);
+                        if include {
+                            found.push(index);
+                        }
+                    }
                 }
             }
         }
