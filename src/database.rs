@@ -19,9 +19,26 @@ impl Database {
         }
     }
 
-    pub fn insert_one(&mut self, document: Value) {
-        self.documents.push(document);
-        self.save()
+    pub fn insert_one(&mut self, document: Value) -> Result<(), &'static str> {
+        match document.as_object() {
+            None => Err("document to insert was invalid"),
+            Some(_) => {
+                self.documents.push(document);
+                self.save();
+                Ok(())
+            }
+        }
+    }
+
+    pub fn insert_many(&mut self, documents: Value) -> Result<(), &'static str> {
+        match documents.as_array() {
+            None => Err("documents to insert were invalid"),
+            Some(doc_vec) => {
+                self.documents.append(&mut doc_vec.to_owned());
+                self.save();
+                Ok(())
+            }
+        }
     }
 
     pub fn find_one(&self, query: Value) -> Option<Value> {
