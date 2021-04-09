@@ -41,11 +41,29 @@ fn main() {
     }
 
     let query = json!({
-        "age": 26,
+        "age": 27,
     });
 
     match db.find_many(query) {
         None => println!("No results"),
         Some(results) => println!("Results: {:?}", results),
+    }
+
+    let query = json!({
+        "age": 27,
+    });
+
+    match db.delete_many(query) {
+        Err(e) => println!("{}", e),
+        Ok(()) => println!("Successfully deleted documents"),
+    }
+
+    let query = json!({
+        "name": "Carisa",
+    });
+
+    match db.delete_one(query) {
+        Err(e) => println!("{}", e),
+        Ok(()) => println!("Successfully deleted document"),
     }
 }
