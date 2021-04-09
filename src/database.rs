@@ -104,13 +104,13 @@ impl Database {
                     for index in found.into_iter() {
                         found_map.insert(index, true);
                     }
-                    let mut temp = Vec::new();
+                    let mut temp_documents = Vec::new();
                     for (index, document) in self.documents.iter().enumerate() {
                         if !found_map.contains_key(&index) {
-                            temp.push(document.to_owned())
+                            temp_documents.push(document.to_owned())
                         }
                     }
-                    self.documents = temp;
+                    self.documents = temp_documents;
                     self.save();
                     Ok(())
                 }
