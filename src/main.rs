@@ -66,6 +66,19 @@ fn main() {
         "age": 27,
     });
 
+    let updates = json!({
+        "age": 28
+    });
+
+    match db.update_many(query, updates) {
+        Err(e) => println!("{}", e),
+        Ok(()) => println!("Successfully updated documents"),
+    }
+
+    let query = json!({
+        "age": 28,
+    });
+
     match db.delete_many(query) {
         Err(e) => println!("{}", e),
         Ok(()) => println!("Successfully deleted documents"),
