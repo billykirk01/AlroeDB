@@ -60,30 +60,39 @@ impl Database {
         }
     }
 
-    // pub fn update_one(
-    //     &mut self,
-    //     query: serde_json::Value,
-    //     update: serde_json::Value,
-    // ) -> Result<(), String> {
-    //     match query.as_object() {
-    //         None => return Err("query was invalid".to_string()),
-    //         Some(_) => (),
-    //     };
+    pub fn update_one(
+        &mut self,
+        query: serde_json::Value,
+        update: serde_json::Value,
+    ) -> Result<(), String> {
+        match query.as_object() {
+            None => return Err("query was invalid".to_string()),
+            Some(_) => (),
+        };
 
-    //     match update.as_object() {
-    //         None => return Err("updates were invalid".to_string()),
-    //         Some(_) => (),
-    //     };
+        let updates_object = match update.as_object() {
+            None => return Err("updates were invalid".to_string()),
+            Some(updates) => updates,
+        };
 
-    //     match self.search_documents(query) {
-    //         None => return Err("document to delete not found".to_string()),
-    //         Some(found) => {
-    //             todo!()
-    //         }
-    //     };
+        let found = match self.search_documents(query) {
+            None => return Err("document to delete not found".to_string()),
+            Some(found) => found,
+        };
 
-    //     self.save()
-    // }
+        match self.documents[found[0]].as_object() {
+            None => return Err("document to delete not found".to_string()),
+            Some(doc) => {
+                let mut temp = doc.to_owned();
+                for (key, value) in updates_object.iter() {
+                    temp.insert(key.to_owned(), value.to_owned());
+                }
+                self.documents[found[0]] = serde_json::Value::Object(temp);
+            }
+        }
+
+        self.save()
+    }
 
     // pub fn update_many(
     //     &mut self,
