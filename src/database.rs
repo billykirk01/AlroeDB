@@ -120,17 +120,15 @@ impl Database {
             }
         };
 
-        for (index, document) in self.documents.to_owned().iter().enumerate() {
-            if found_map.contains_key(&index) {
-                match document.as_object() {
-                    None => return Err("document to delete not found".to_string()),
-                    Some(doc) => {
-                        let mut temp = doc.to_owned();
-                        for (key, value) in updates_object.iter() {
-                            temp.insert(key.to_owned(), value.to_owned());
-                        }
-                        self.documents[index] = serde_json::Value::Object(temp);
+        for (index, _) in found_map {
+            match self.documents[index].as_object() {
+                None => return Err("document to delete not found".to_string()),
+                Some(doc) => {
+                    let mut temp = doc.to_owned();
+                    for (key, value) in updates_object.iter() {
+                        temp.insert(key.to_owned(), value.to_owned());
                     }
+                    self.documents[index] = serde_json::Value::Object(temp);
                 }
             }
         }
