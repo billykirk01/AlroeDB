@@ -94,30 +94,49 @@ impl Database {
         self.save()
     }
 
-    // pub fn update_many(
-    //     &mut self,
-    //     query: serde_json::Value,
-    //     update: serde_json::Value,
-    // ) -> Result<(), String> {
-    //     match query.as_object() {
-    //         None => return Err("query was invalid".to_string()),
-    //         Some(_) => (),
-    //     };
+    pub fn update_many(
+        &mut self,
+        query: serde_json::Value,
+        update: serde_json::Value,
+    ) -> Result<(), String> {
+        match query.as_object() {
+            None => return Err("query was invalid".to_string()),
+            Some(_) => (),
+        };
 
-    //     match update.as_object() {
-    //         None => return Err("updates were invalid".to_string()),
-    //         Some(_) => (),
-    //     };
+        let updates_object = match update.as_object() {
+            None => return Err("updates were invalid".to_string()),
+            Some(updates) => updates,
+        };
 
-    //     match self.search_documents(query) {
-    //         None => return Err("document to delete not found".to_string()),
-    //         Some(found) => {
-    //             todo!()
-    //         }
-    //     };
+        let found_map = match self.search_documents(query) {
+            None => return Err("document to delete not found".to_string()),
+            Some(found) => {
+                let mut found_map: HashMap<usize, bool> = HashMap::new();
+                for index in found.into_iter() {
+                    found_map.insert(index, true);
+                }
+                found_map
+            }
+        };
 
-    //     self.save()
-    // }
+        for (index, document) in self.documents.to_owned().iter().enumerate() {
+            if !found_map.contains_key(&index) {
+                match document.as_object() {
+                    None => return Err("document to delete not found".to_string()),
+                    Some(doc) => {
+                        let mut temp = doc.to_owned();
+                        for (key, value) in updates_object.iter() {
+                            temp.insert(key.to_owned(), value.to_owned());
+                        }
+                        self.documents[index] = serde_json::Value::Object(temp);
+                    }
+                }
+            }
+        }
+
+        self.save()
+    }
 
     pub fn delete_one(&mut self, query: serde_json::Value) -> Result<(), String> {
         match query.as_object() {
