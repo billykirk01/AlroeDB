@@ -121,7 +121,7 @@ impl Database {
         };
 
         for (index, document) in self.documents.to_owned().iter().enumerate() {
-            if !found_map.contains_key(&index) {
+            if found_map.contains_key(&index) {
                 match document.as_object() {
                     None => return Err("document to delete not found".to_string()),
                     Some(doc) => {
