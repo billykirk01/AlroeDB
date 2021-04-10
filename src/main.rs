@@ -20,7 +20,7 @@ fn main() {
 
     let success = db.insert_many(json!([{
         "name": "Tanner",
-        "age": 27,
+        "age": 26,
     },{
         "name": "Carisa",
         "age": 26,
@@ -47,6 +47,19 @@ fn main() {
     match db.find_many(query) {
         None => println!("No results"),
         Some(results) => println!("Results: {:?}", results),
+    }
+
+    let query = json!({
+        "name": "Tanner",
+    });
+
+    let updates = json!({
+        "age": 27
+    });
+
+    match db.update_one(query, updates) {
+        Err(e) => println!("{}", e),
+        Ok(()) => println!("Successfully updated document"),
     }
 
     let query = json!({
